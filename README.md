@@ -1,12 +1,12 @@
 # FastViromeExplorer
-Indentify the viruses/phages and their abundance in the viral metagenomics data.
+Indentify the viruses/phages and their abundance in the viral metagenomics data. The paper  describing FastViromeExplorer is available from here: https://peerj.com/articles/4227/.
 
 # Installation
 FastViromeExplorer requires JAVA (JDK) 1.8 or later, Samtools 1.4 or later, and Kallisto 0.43.0 or later installed in the user's machine.
 ## Download FastViromeExplorer
 You can download FastViromeExplorer directly from github and extract it. You can also download it using the following command:
 ```bash
-git clone git@code.vt.edu:saima5/FastViromeExplorer.git
+git clone https://github.com/saima-tithi/FastViromeExplorer.git
 ```
 From now on, we will refer the FastViromeExplorer directory in the user's local machine as `project directory`. The `project directory` will contain 5 folders: src, bin, test, tools-linux, and tools-mac. It will also contain two text files: ncbi-viruses-list and imgvr-viruses-list.txt.
 ## Install Java
