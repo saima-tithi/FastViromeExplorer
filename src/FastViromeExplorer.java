@@ -4,18 +4,18 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 
@@ -34,8 +34,9 @@ public class FastViromeExplorer {
 	private static boolean DESC = false;
 	private static Map<String, Integer> virusLength;
 	private static Map<String, String> virusLineage;
-	private static Set<String> virusRatio;
+	private static Map<String, String> virusRatio;
 	private static boolean useSalmon = false;
+	private static boolean reportRatio = false;
 
 	// sort a map
 	private static Map<String, Double> sortByComparator(Map<String, Double> unsortMap, final boolean order) {
@@ -98,7 +99,13 @@ public class FastViromeExplorer {
 							} else {
 								useSalmon = false;
 							}
-						} else {
+						} else if (args[i].equals("-reportRatio")) {
+                            if (args[i + 1].equalsIgnoreCase("true")) {
+                                reportRatio = true;
+                            } else {
+                                reportRatio = false;
+                            }
+                        } else {
 							System.out.println("Invalid argument.");
 							printUsage();
 							System.exit(1);
@@ -151,6 +158,8 @@ public class FastViromeExplorer {
 		System.out.println("-cn: the value of number of reads criteria, default: 10.");
 		System.out.println(
 				"-salmon: use salmon instead of kallisto, default: false. To use salmon pass '-salmon true' as parameter.");
+		System.out.println(
+                "-reportRatio: default: false. To get ratio pass '-reportRatio true' as parameter.");
 	}
 
 	private static void callKallisto() {
@@ -169,15 +178,11 @@ public class FastViromeExplorer {
 					command = "kallisto quant -i " + kallistoIndexFile + " -o " + outDir
 							+ " --single -l 200 -s 50 --pseudobam " + read1
 							+ " | samtools view -bS - | samtools view -h -F 0x04 -b - | " + "samtools sort - -o "
-							+ outDir + "/FastViromeExplorer-reads-mapped-sorted.sam" + "\n"
-							+ "awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}' "
-							+ read1;
+							+ outDir + "/FastViromeExplorer-reads-mapped-sorted.sam\n";
 				} else {
 					command = "kallisto quant -i " + kallistoIndexFile + " -o " + outDir + " --pseudobam " + read1 + " "
 							+ read2 + " | samtools view -bS - | samtools view -h -F 0x04 -b - | "
-							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam" + "\n"
-							+ "awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}' "
-							+ read1;
+							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam\n";
 				}
 			} else if (!refDbFile.isEmpty()) {
 				if (read2.isEmpty()) {
@@ -185,16 +190,12 @@ public class FastViromeExplorer {
 							+ "kallisto quant -i kallisto-index.idx " + "-o " + outDir
 							+ " --single -l 200 -s 50 --pseudobam " + read1
 							+ " | samtools view -bS - | samtools view -h -F 0x04 -b - | " + "samtools sort - -o "
-							+ outDir + "/FastViromeExplorer-reads-mapped-sorted.sam" + "\n"
-							+ "awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}' "
-							+ read1;
+							+ outDir + "/FastViromeExplorer-reads-mapped-sorted.sam\n";
 				} else {
 					command = "kallisto index -i kallisto-index.idx " + refDbFile + "\n"
 							+ "kallisto quant -i kallisto-index.idx " + "-o " + outDir + " --pseudobam " + read1 + " "
 							+ read2 + " | samtools view -bS - | samtools view -h -F 0x04 -b - | "
-							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam" + "\n"
-							+ "awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}' "
-							+ read1;
+							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam\n";
 				}
 			}
 
@@ -207,18 +208,11 @@ public class FastViromeExplorer {
 			builder.redirectError(new File("log.txt"));
 			Process process = builder.start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			String str = "";
-			while ((str = reader.readLine()) != null) {
-				avgReadLen = Double.parseDouble(str);
+			while (reader.readLine() != null) {
 			}
 			process.waitFor();
 		} catch (Exception ex) {
 			ex.printStackTrace();
-		}
-
-		if (avgReadLen == 0) {
-			System.out.println("Could not extract average read length from read file.");
-			System.exit(1);
 		}
 	}
 
@@ -238,16 +232,12 @@ public class FastViromeExplorer {
 					command = "salmon quant -i " + kallistoIndexFile 
 							+ " -l A -r " + read1 + " -o " + outDir
 							+ " --writeMappings | samtools view -bS - | samtools view -h -F 0x04 -b - | "
-							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam" + "\n"
-							+ "awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}' "
-							+ read1;
+							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam\n";
 				} else {
 					command = "salmon quant -i " + kallistoIndexFile 
 							+ " -l A -1 " + read1 + " -2 " + read2 + " -o "
 							+ outDir + " --writeMappings | samtools view -bS - | samtools view -h -F 0x04 -b - | "
-							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam" + "\n"
-							+ "awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}' "
-							+ read1;
+							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam\n";
 				}
 			} else if (!refDbFile.isEmpty()) {
 				if (read2.isEmpty()) {
@@ -255,17 +245,13 @@ public class FastViromeExplorer {
 							+ "salmon quant -i salmon-index"
 							+ " -l A -r " + read1 + " -o " + outDir
 							+ " --writeMappings | samtools view -bS - | samtools view -h -F 0x04 -b - | "
-							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam" + "\n"
-							+ "awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}' "
-							+ read1;
+							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam\n";
 				} else {
 					command = "salmon index -t " + refDbFile + " -i salmon-index\n" 
 							+ "salmon quant -i salmon-index"
 							+ " -l A -1 " + read1 + " -2 " + read2 + " -o " + outDir
 							+ " --writeMappings | samtools view -bS - | samtools view -h -F 0x04 -b - | "
-							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam" + "\n"
-							+ "awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}' "
-							+ read1;
+							+ "samtools sort - -o " + outDir + "/FastViromeExplorer-reads-mapped-sorted.sam\n";
 				}
 			}
 
@@ -278,19 +264,47 @@ public class FastViromeExplorer {
 			builder.redirectError(new File("log.txt"));
 			Process process = builder.start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			String str = "";
-			while ((str = reader.readLine()) != null) {
-				avgReadLen = Double.parseDouble(str);
+			while (reader.readLine() != null) {
 			}
 			process.waitFor();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+	}
+	
+	private static void getAverageReadLength() {
+	    try {
+            String command = "";
+            if (read1.endsWith(".gz")) {
+                command = "gzip -dc " + read1 
+                        + " | awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}'";
+            } else {
+                command = "awk 'NR%4 == 2 {lenSum+=length($0); readCount++;} END {print lenSum/readCount}' "
+                        + read1;
+            }
+            
+            FileWriter shellFileWriter = new FileWriter("run.sh");
+            shellFileWriter.write("#!/bin/bash\n");
+            shellFileWriter.write(command);
+            shellFileWriter.close();
 
-		if (avgReadLen == 0) {
-			System.out.println("Could not extract average read length from read file.");
-			System.exit(1);
-		}
+            ProcessBuilder builder = new ProcessBuilder("sh", "run.sh");
+            builder.redirectError(Redirect.appendTo(new File("log.txt")));
+            Process process = builder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String str = "";
+            while ((str = reader.readLine()) != null) {
+                avgReadLen = Double.parseDouble(str);
+            }
+            process.waitFor();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+	    
+	    if (avgReadLen == 0) {
+            System.out.println("Could not extract average read length from read file.");
+            System.exit(1);
+        }
 	}
 
 	private static void getVirusLength() {
@@ -319,7 +333,7 @@ public class FastViromeExplorer {
 	}
 
 	private static void getRatio() {
-		virusRatio = new HashSet<String>();
+		virusRatio = new HashMap<String, String>();
 		// read from sam
 		TreeSet<Read> readSet = new TreeSet<Read>();
 		int numReads = 0;
@@ -342,7 +356,7 @@ public class FastViromeExplorer {
 						double coveredBps = 0.0;
 						if (!virusLength.containsKey(prevVirusName)) {
 							System.out.println("Could not get the genome length of " + prevVirusName 
-									+ ". Please make sure you provided the right virus-length file using -l parameter.");
+									+ ". Please make sure you provided the right genome-length file using -l parameter.");
 						}
 						double genomeLen = virusLength.get(prevVirusName);
 
@@ -372,11 +386,13 @@ public class FastViromeExplorer {
 							ratio = predictedSupport / support;
 						}
 						if (ratio >= ratioCriteria && support >= coverageCriteria) {
-							/*
-							 * virusRatio.put(prevVirusName, support + "\t" + predictedSupport + "\t" + new
-							 * DecimalFormat("##.####").format(ratio));
-							 */
-							virusRatio.add(prevVirusName);
+						    if (reportRatio) {
+						        virusRatio.put(prevVirusName, support + "\t" + predictedSupport + "\t" 
+						            + new DecimalFormat("##.####").format(ratio));
+						    }
+						    else {
+						        virusRatio.put(prevVirusName, "");
+						    }							
 						}
 						// create new readSet
 						readSet = new TreeSet<Read>();
@@ -423,11 +439,13 @@ public class FastViromeExplorer {
 			}
 
 			if (ratio >= ratioCriteria && support >= coverageCriteria) {
-				/*
-				 * virusRatio.put(prevVirusName, support + "\t" + predictedSupport + "\t" + new
-				 * DecimalFormat("##.####").format(ratio));
-				 */
-				virusRatio.add(prevVirusName);
+			    if (reportRatio) {
+                    virusRatio.put(prevVirusName, support + "\t" + predictedSupport + "\t" 
+                        + new DecimalFormat("##.####").format(ratio));
+                }
+                else {
+                    virusRatio.put(prevVirusName, "");
+                }
 			}
 
 			readSet = null;
@@ -462,18 +480,27 @@ public class FastViromeExplorer {
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter(outDir + "/FastViromeExplorer-final-sorted-abundance.tsv"));
-
-			// bw.write("#NCBIAccession\tName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\tSupport\tPredictedSupport\tRatio\n");
-			bw.write(
-					"#VirusIdentifier\tVirusName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\n");
-			for (Entry<String, Double> entry : map.entrySet()) {
-				if (virusRatio.contains(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
-					bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\n");
-				}
+			if (reportRatio) {
+			    bw.write(
+			        "#NCBIAccession\tName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\tSupport\tPredictedSupport\tRatio\n");
+			    for (Entry<String, Double> entry : map.entrySet()) {
+	                if (virusRatio.containsKey(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
+	                    bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\t" 
+	                        + virusRatio.get(entry.getKey()) + "\n");
+	                }
+	            }
+			}
+			else {
+        			bw.write(
+        					"#VirusIdentifier\tVirusName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\n");
+        			for (Entry<String, Double> entry : map.entrySet()) {
+        				if (virusRatio.containsKey(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
+        					bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\n");
+        				}
+        			}
 			}
 			bw.close();
 		}
-
 		catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -504,18 +531,27 @@ public class FastViromeExplorer {
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter(outDir + "/FastViromeExplorer-final-sorted-abundance.tsv"));
-
-			// bw.write("#NCBIAccession\tName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\tSupport\tPredictedSupport\tRatio\n");
-			bw.write(
-					"#VirusIdentifier\tVirusName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\n");
-			for (Entry<String, Double> entry : map.entrySet()) {
-				if (virusRatio.contains(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
-					bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\n");
-				}
-			}
+			if (reportRatio) {
+                bw.write(
+                    "#NCBIAccession\tName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\tSupport\tPredictedSupport\tRatio\n");
+                for (Entry<String, Double> entry : map.entrySet()) {
+                    if (virusRatio.containsKey(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
+                        bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\t" 
+                            + virusRatio.get(entry.getKey()) + "\n");
+                    }
+                }
+            }
+            else {
+                bw.write(
+                        "#VirusIdentifier\tVirusName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\n");
+                for (Entry<String, Double> entry : map.entrySet()) {
+                    if (virusRatio.containsKey(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
+                        bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\n");
+                    }
+                }
+            }
 			bw.close();
 		}
-
 		catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -528,6 +564,7 @@ public class FastViromeExplorer {
 		} else {
 			callKallisto();
 		}
+		getAverageReadLength();
 		getVirusLength();
 		getRatio();
 		if (useSalmon) {
