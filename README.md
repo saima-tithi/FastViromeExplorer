@@ -72,8 +72,8 @@ For running FastViromeExplorer using any custom database, please look at our det
 java -cp bin FastViromeExplorer -1 $read1File -2 $read2File -i $indexFile -o $outputDirectory
 
 The full parameter list of FastViromeExplorer:
-1. -1: input .fastq file for read sequences (paired-end 1), mandatory field.
-2. -2: input .fastq file for read sequences (paired-end 2).
+1. -1: input .fastq file or .fastq.gz file for read sequences (paired-end 1), mandatory field.
+2. -2: input .fastq file or .fastq.gz file for read sequences (paired-end 2).
 3. -i: kallisto index file, mandatory field.
 4. -db: reference database file in fasta/fa format.
 5. -o: output directory, default option is the project directory.
@@ -81,6 +81,7 @@ The full parameter list of FastViromeExplorer:
 7. -cr: the value of ratio criteria, default: 0.3.
 8. -co: the value of coverage criteria, default: 0.1.
 9. -cn: the value of number of reads criteria, default: 10.
+10. -salmon: use salmon instead of kallisto, default: false. To use salmon pass '-salmon true' as parameter.
 
 # Support
 If you are having issues, please look at the detailed manual at http://fastviromeexplorer.readthedocs.io/en/latest/ or contact us at saima5@vt.edu
