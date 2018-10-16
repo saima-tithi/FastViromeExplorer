@@ -140,7 +140,7 @@ public class FastViromeExplorer {
 					+ "Using the default value: 0.1.");
 			coverageCriteria = 0.1;
 		}
-	}
+	}	
 
 	private static void printUsage() {
 		System.out.println("Usage:");
@@ -161,6 +161,35 @@ public class FastViromeExplorer {
 		System.out.println(
                 "-reportRatio: default: false. To get ratio pass '-reportRatio true' as parameter.");
 	}
+	
+	private static void checkInputs() {
+        File file = new File(read1);
+        if (!file.exists() || file.isDirectory()) {
+            System.out.println("Could not find read file: " + read1);
+            System.exit(1);
+        }
+        if(!read2.isEmpty()) {
+            file = new File(read2);
+            if (!file.exists() || file.isDirectory()) {
+                System.out.println("Could not find read file: " + read2);
+                System.exit(1);
+            }
+        }
+        if(!kallistoIndexFile.isEmpty()) {
+            file = new File(kallistoIndexFile);
+            if (!file.exists() || file.isDirectory()) {
+                System.out.println("Could not find index file: " + kallistoIndexFile);
+                System.exit(1);
+            }
+        }
+        if(!refDbFile.isEmpty()) {
+            file = new File(refDbFile);
+            if (!file.exists() || file.isDirectory()) {
+                System.out.println("Could not find reference database file: " + refDbFile);
+                System.exit(1);
+            }
+        }
+    }
 
 	private static void callKallisto() {
 		File f1 = new File(virusListFile);
@@ -410,43 +439,49 @@ public class FastViromeExplorer {
 				}
 			}
 			// calculate ratio for the last virus
-			double coveredBps = 0.0;
-			double genomeLen = virusLength.get(prevVirusName);
-			for (int i = 1; i <= genomeLen; i++) {
-				Read tempRead = new Read(i, i + (2 * (int) avgReadLen));
-				NavigableSet<Read> smallSet = readSet.headSet(tempRead, true);
-				Iterator<Read> it = smallSet.descendingIterator();
-				while (it.hasNext()) {
-					tempRead = it.next();
-					if (i >= tempRead.getStartPos() && i <= tempRead.getEndPos()) {
-						coveredBps++;
-						break;
-					}
-					if (tempRead.getEndPos() + 2 * avgReadLen < i) {
-						break;
-					}
-				}
-			}
-
-			double support = coveredBps / genomeLen;
-			double cov = (numReads * avgReadLen) / genomeLen;
-			double predictedSupport = 1 - Math.exp(-cov);
-			ratio = 0.0;
-			if (support < predictedSupport) {
-				ratio = support / predictedSupport;
-			} else {
-				ratio = predictedSupport / support;
-			}
-
-			if (ratio >= ratioCriteria && support >= coverageCriteria) {
-			    if (reportRatio) {
-                    virusRatio.put(prevVirusName, support + "\t" + predictedSupport + "\t" 
-                        + new DecimalFormat("##.####").format(ratio));
+			if (prevVirusName != null) {
+			    double coveredBps = 0.0;
+			    if (!virusLength.containsKey(prevVirusName)) {
+                    System.out.println("Could not get the genome length of " + prevVirusName 
+                            + ". Please make sure you provided the right genome-length file using -l parameter.");
                 }
-                else {
-                    virusRatio.put(prevVirusName, "");
-                }
-			}
+	            double genomeLen = virusLength.get(prevVirusName);
+	            for (int i = 1; i <= genomeLen; i++) {
+	                Read tempRead = new Read(i, i + (2 * (int) avgReadLen));
+	                NavigableSet<Read> smallSet = readSet.headSet(tempRead, true);
+	                Iterator<Read> it = smallSet.descendingIterator();
+	                while (it.hasNext()) {
+	                    tempRead = it.next();
+	                    if (i >= tempRead.getStartPos() && i <= tempRead.getEndPos()) {
+	                        coveredBps++;
+	                        break;
+	                    }
+	                    if (tempRead.getEndPos() + 2 * avgReadLen < i) {
+	                        break;
+	                    }
+	                }
+	            }
+
+	            double support = coveredBps / genomeLen;
+	            double cov = (numReads * avgReadLen) / genomeLen;
+	            double predictedSupport = 1 - Math.exp(-cov);
+	            ratio = 0.0;
+	            if (support < predictedSupport) {
+	                ratio = support / predictedSupport;
+	            } else {
+	                ratio = predictedSupport / support;
+	            }
+
+	            if (ratio >= ratioCriteria && support >= coverageCriteria) {
+	                if (reportRatio) {
+	                    virusRatio.put(prevVirusName, support + "\t" + predictedSupport + "\t" 
+	                        + new DecimalFormat("##.####").format(ratio));
+	                }
+	                else {
+	                    virusRatio.put(prevVirusName, "");
+	                }
+	            }
+			}			
 
 			readSet = null;
 			br.close();
@@ -559,6 +594,8 @@ public class FastViromeExplorer {
 
 	public static void main(String[] args) {
 		parseArguments(args);
+		checkInputs();
+		System.out.println("Finished parsing inputs.");
 		if (useSalmon) {
 			callSalmon();
 		} else {
@@ -572,5 +609,6 @@ public class FastViromeExplorer {
 		} else {
 			getSortedAbundanceRatio();
 		}
+		System.out.println("Finished running FastViromeExplorer.");
 	}
 }
