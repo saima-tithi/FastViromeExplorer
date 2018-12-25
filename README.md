@@ -2,7 +2,7 @@
 Indentify the viruses/phages and their abundance in the viral metagenomics data. The paper  describing FastViromeExplorer is available from here: https://peerj.com/articles/4227/.
 
 # Installation
-FastViromeExplorer requires JAVA (JDK) 1.8 or later, Samtools 1.4 or later, and Kallisto 0.43.0 or later installed in the user's machine.
+FastViromeExplorer requires JAVA (JDK) 1.8 or later, Samtools 1.4 or later, and Kallisto 0.43.0 or 0.43.1 installed in the user's machine. As in later versions of Kallisto, the output format of pseudoalignments is different, please use Kallisto version 0.43.0 or 0.43.1.
 ## Download FastViromeExplorer
 You can download FastViromeExplorer directly from github and extract it. You can also download it using the following command:
 ```bash
