@@ -52,6 +52,12 @@ mkdir test-output
 java -cp bin FastViromeExplorer -1 test/reads_1.fq -i test/testset-kallisto-index.idx -o test-output
 ```
 
+By default, FastViromeExplorer uses `kallisto` as the alignment tool. FastViromeExplorer can also be run using `Salmon` as the alignment tool for the pseudoalignment step. For running using the `Salmon` tool, from the project directory, run the following commands:
+```bash
+mkdir test-output-salmon
+java -cp bin FastViromeExplorer -1 test/reads_1.fq -2 test/reads_2.fq -i test/testset-salmon-index -o test-output-salmon -salmon true
+```
+
 # Run FastViromeExplorer using NCBI RefSeq database
 Some pre-computed kallisto index files are given in the following link: http://bench.cs.vt.edu/FastViromeExplorer/.
 Download the kallisto index file for NCBI RefSeq database "ncbi-virus-kallisto-index-k31.idx" and save it. In terminal, go into the project directory. From the project directory, run the following command:
@@ -74,7 +80,7 @@ java -cp bin FastViromeExplorer -1 $read1File -2 $read2File -i $indexFile -o $ou
 The full parameter list of FastViromeExplorer:
 1. -1: input .fastq file or .fastq.gz file for read sequences (paired-end 1), mandatory field.
 2. -2: input .fastq file or .fastq.gz file for read sequences (paired-end 2).
-3. -i: kallisto index file, mandatory field.
+3. -i: kallisto/salmon index file, mandatory field.
 4. -db: reference database file in fasta/fa format.
 5. -o: output directory, default option is the project directory.
 6. -l: virus list containing all viruses present in the reference database along with their length.

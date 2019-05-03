@@ -120,7 +120,7 @@ public class FastViromeExplorer {
 			System.exit(1);
 		}
 		if (kallistoIndexFile.isEmpty() && refDbFile.isEmpty()) {
-			System.out.println("Please provide the reference database or kallisto index file.");
+			System.out.println("Please provide the reference database or kallisto index file or salmon index directory.");
 			printUsage();
 			System.exit(1);
 		}
@@ -148,7 +148,7 @@ public class FastViromeExplorer {
 				"java -cp bin FastViromeExplorer -1 $read1File -2 $read2File -i $indexFile -o $outputDirectory");
 		System.out.println("-1: input .fastq file for read sequences (paired-end 1), mandatory field.");
 		System.out.println("-2: input .fastq file for read sequences (paired-end 2).");
-		System.out.println("-i: kallisto index file, mandatory field.");
+		System.out.println("-i: kallisto/salmon index file, mandatory field.");
 		System.out.println("-db: reference database file in fasta/fa format.");
 		System.out.println("-o: output directory. Default option is the project directory.");
 		System.out.println("-l: virus list containing "
@@ -177,9 +177,17 @@ public class FastViromeExplorer {
         }
         if(!kallistoIndexFile.isEmpty()) {
             file = new File(kallistoIndexFile);
-            if (!file.exists() || file.isDirectory()) {
-                System.out.println("Could not find index file: " + kallistoIndexFile);
-                System.exit(1);
+            if (useSalmon) {
+                if (!file.exists()) {
+                    System.out.println("Could not find salmon index directory: " + kallistoIndexFile);
+                    System.exit(1);
+                }
+            }
+            else {
+                if (!file.exists() || file.isDirectory()) {
+                    System.out.println("Could not find kallisto index file: " + kallistoIndexFile);
+                    System.exit(1);
+                }
             }
         }
         if(!refDbFile.isEmpty()) {
