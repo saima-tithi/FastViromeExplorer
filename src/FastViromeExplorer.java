@@ -339,7 +339,7 @@ public class FastViromeExplorer {
         }
 	    
 	    if (avgReadLen == 0) {
-            System.out.println("Could not extract average read length from read file.");
+            System.out.println("Error: Could not extract average read length from read file.");
             System.exit(1);
         }
 	}
@@ -373,6 +373,7 @@ public class FastViromeExplorer {
 		virusRatio = new HashMap<String, String>();
 		// read from sam
 		TreeSet<Read> readSet = new TreeSet<Read>();
+		int totalReads = 0;
 		int numReads = 0;
 		BufferedReader br = null;
 		try {
@@ -383,6 +384,7 @@ public class FastViromeExplorer {
 			// read sam file
 			while ((str = br.readLine()) != null) {
 				if (!str.startsWith("@")) {
+				    totalReads++;
 					String[] results = str.split("\t");
 					String virusName = results[2].trim();
 					int startPos = Integer.parseInt(results[3].trim());
@@ -496,9 +498,20 @@ public class FastViromeExplorer {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		if (totalReads == 0) {
+		    System.out.println("Error: The sam file "
+		        + "FastViromeExplorer-reads-mapped-sorted.sam is empty. Please check the "
+		        + "kallisto and samtools version. Please use kallisto 0.43.1 and samtools 1.4 or later.");
+		    System.exit(1);
+		}
+		else {
+		    System.out.println("Processed " + totalReads + " reads from "
+		        + "FastViromeExplorer-reads-mapped-sorted.sam.");
+		}
 	}
 
-	private static void getSortedAbundanceRatio() {
+	private static int getSortedAbundanceRatio() {
+	    int numFinalViruses = 0;
 		Map<String, Double> map = new HashMap<String, Double>();
 		BufferedReader br = null;
 		try {
@@ -528,6 +541,7 @@ public class FastViromeExplorer {
 			        "#NCBIAccession\tName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\tSupport\tPredictedSupport\tRatio\n");
 			    for (Entry<String, Double> entry : map.entrySet()) {
 	                if (virusRatio.containsKey(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
+	                    numFinalViruses++;
 	                    bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\t" 
 	                        + virusRatio.get(entry.getKey()) + "\n");
 	                }
@@ -538,7 +552,8 @@ public class FastViromeExplorer {
         					"#VirusIdentifier\tVirusName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\n");
         			for (Entry<String, Double> entry : map.entrySet()) {
         				if (virusRatio.containsKey(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
-        					bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\n");
+        					numFinalViruses++;
+        				    bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\n");
         				}
         			}
 			}
@@ -547,9 +562,11 @@ public class FastViromeExplorer {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+		return numFinalViruses;
 	}
 
-	private static void getSortedAbundanceRatioFromSalmon() {
+	private static int getSortedAbundanceRatioFromSalmon() {
+	    int numFinalViruses = 0;
 		Map<String, Double> map = new HashMap<String, Double>();
 		BufferedReader br = null;
 		try {
@@ -579,6 +596,7 @@ public class FastViromeExplorer {
                     "#NCBIAccession\tName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\tSupport\tPredictedSupport\tRatio\n");
                 for (Entry<String, Double> entry : map.entrySet()) {
                     if (virusRatio.containsKey(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
+                        numFinalViruses++;
                         bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\t" 
                             + virusRatio.get(entry.getKey()) + "\n");
                     }
@@ -589,6 +607,7 @@ public class FastViromeExplorer {
                         "#VirusIdentifier\tVirusName\tkingdom;phylum;class;order;family;genus;species\tEstimatedAbundance\n");
                 for (Entry<String, Double> entry : map.entrySet()) {
                     if (virusRatio.containsKey(entry.getKey()) && entry.getValue() >= numReadsCriteria) {
+                        numFinalViruses++;
                         bw.write(entry.getKey() + "\t" + virusLineage.get(entry.getKey()) + "\t" + entry.getValue() + "\n");
                     }
                 }
@@ -598,6 +617,7 @@ public class FastViromeExplorer {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+		return numFinalViruses;
 	}
 
 	public static void main(String[] args) {
@@ -612,10 +632,20 @@ public class FastViromeExplorer {
 		getAverageReadLength();
 		getVirusLength();
 		getRatio();
+		int numFinalViruses = 0;
 		if (useSalmon) {
-			getSortedAbundanceRatioFromSalmon();
+			numFinalViruses = getSortedAbundanceRatioFromSalmon();
 		} else {
-			getSortedAbundanceRatio();
+			numFinalViruses = getSortedAbundanceRatio();
+		}
+		if (numFinalViruses == 0) {
+		    System.out.println("None of the viruses passed all the 3 filtering criteria. "
+		        + "To get some output, you can relax the filtering criteria or you can "
+		        + "change the database to better fit this sample.");
+		}
+		else {
+		    System.out.println("FastViromeExplorer reported " + numFinalViruses 
+		        + " viruses/genomes in the output file FastViromeExplorer-final-sorted-abundance.tsv");
 		}
 		System.out.println("Finished running FastViromeExplorer.");
 	}
