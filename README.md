@@ -60,13 +60,15 @@ java -cp bin FastViromeExplorer -1 test/reads_1.fq -2 test/reads_2.fq -i test/te
 
 # Run FastViromeExplorer using NCBI RefSeq database
 Some pre-computed kallisto index files are given in the following link: http://bench.cs.vt.edu/FastViromeExplorer/.
-Download the kallisto index file for NCBI RefSeq database "ncbi-virus-kallisto-index-k31.idx" and save it. In terminal, go into the project directory. From the project directory, run the following command:
+Download the kallisto index file for NCBI RefSeq database "ncbi-virus-kallisto-index-k31.idx" and save it. From terminal, run the following command:
 ```bash
+mkdir $outputDirectory
 java -cp /path-to-FastViromeExplorer/bin FastViromeExplorer -1 $read1File -2 $read2File -i /path-to-index-file/ncbi-virus-kallisto-index-k31.idx -o $outputDirectory
 ```
 # Run FastViromeExplorer using IMG/VR database
-Download the kallisto index file for IMG/VR database "imgvr-virus-kallisto-index-k31.idx" from http://bench.cs.vt.edu/FastViromeExplorer/ and save it. In terminal, go into the project directory. From the project directory, run the following command:
+Download the kallisto index file for IMG/VR database "imgvr-virus-kallisto-index-k31.idx" from http://bench.cs.vt.edu/FastViromeExplorer/ and save it. From terminal, run the following command:
 ```bash
+mkdir $outputDirectory
 java -cp /path-to-FastViromeExplorer/bin FastViromeExplorer -1 $read1File -2 $read2File -i /path-to-index-file/imgvr-virus-kallisto-index-k31.idx -l imgvr-viruses-list.txt -o $outputDirectory
 ```
 For running FastViromeExplorer using IMG/VR database, we need to specify the kallisto index file and the list of viruses in the database along with their genome length, which is given in the file "imgvr-viruses-list.txt".
