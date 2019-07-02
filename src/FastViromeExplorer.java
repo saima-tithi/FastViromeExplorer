@@ -236,13 +236,13 @@ public class FastViromeExplorer {
 				}
 			}
 
-			FileWriter shellFileWriter = new FileWriter("run.sh");
+			FileWriter shellFileWriter = new FileWriter(outDir + "/run.sh");
 			shellFileWriter.write("#!/bin/bash\n");
 			shellFileWriter.write(command);
 			shellFileWriter.close();
 
-			ProcessBuilder builder = new ProcessBuilder("sh", "run.sh");
-			builder.redirectError(new File("log.txt"));
+			ProcessBuilder builder = new ProcessBuilder("sh", outDir + "/run.sh");
+			builder.redirectError(new File(outDir + "/log.txt"));
 			Process process = builder.start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			while (reader.readLine() != null) {
@@ -292,13 +292,13 @@ public class FastViromeExplorer {
 				}
 			}
 
-			FileWriter shellFileWriter = new FileWriter("run.sh");
+			FileWriter shellFileWriter = new FileWriter(outDir + "/run.sh");
 			shellFileWriter.write("#!/bin/bash\n");
 			shellFileWriter.write(command);
 			shellFileWriter.close();
 
-			ProcessBuilder builder = new ProcessBuilder("sh", "run.sh");
-			builder.redirectError(new File("log.txt"));
+			ProcessBuilder builder = new ProcessBuilder("sh", outDir + "/run.sh");
+			builder.redirectError(new File(outDir + "/log.txt"));
 			Process process = builder.start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			while (reader.readLine() != null) {
@@ -320,13 +320,13 @@ public class FastViromeExplorer {
                         + read1;
             }
             
-            FileWriter shellFileWriter = new FileWriter("run.sh");
+            FileWriter shellFileWriter = new FileWriter(outDir + "/run.sh");
             shellFileWriter.write("#!/bin/bash\n");
             shellFileWriter.write(command);
             shellFileWriter.close();
 
-            ProcessBuilder builder = new ProcessBuilder("sh", "run.sh");
-            builder.redirectError(Redirect.appendTo(new File("log.txt")));
+            ProcessBuilder builder = new ProcessBuilder("sh", outDir + "/run.sh");
+            builder.redirectError(Redirect.appendTo(new File(outDir + "/log.txt")));
             Process process = builder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String str = "";
@@ -639,7 +639,8 @@ public class FastViromeExplorer {
 			numFinalViruses = getSortedAbundanceRatio();
 		}
 		if (numFinalViruses == 0) {
-		    System.out.println("None of the viruses passed all the 3 filtering criteria. "
+		    System.out.println("None of the viruses in the given database passed all the 3 filtering criteria. "
+		        + "So the output file FastViromeExplorer-final-sorted-abundance.tsv is empty. "
 		        + "To get some output, you can relax the filtering criteria or you can "
 		        + "change the database to better fit this sample.");
 		}
