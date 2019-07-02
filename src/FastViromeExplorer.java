@@ -145,7 +145,7 @@ public class FastViromeExplorer {
 	private static void printUsage() {
 		System.out.println("Usage:");
 		System.out.println(
-				"java -cp bin FastViromeExplorer -1 $read1File -2 $read2File -i $indexFile -o $outputDirectory");
+				"java -cp /path-to-FastViromeExplorer/bin FastViromeExplorer -1 $read1File -2 $read2File -i $indexFile -o $outputDirectory");
 		System.out.println("-1: input .fastq file for read sequences (paired-end 1), mandatory field.");
 		System.out.println("-2: input .fastq file for read sequences (paired-end 2).");
 		System.out.println("-i: kallisto/salmon index file, mandatory field.");
